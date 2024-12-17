@@ -70,3 +70,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.square-vid {
+  width: 600px;
+  height: 600px;
+}

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react';
 import * as faceapi from 'face-api.js';
+import Link from 'next/link';
 
 const TestPage = () => {
   const imageRef = useRef<HTMLCanvasElement | null>(null);
@@ -10,7 +11,7 @@ const TestPage = () => {
   useEffect(() => {
     // Load the image first
     const image = new Image();
-    image.src = "./images/emotions.png";
+    image.src = "../images/emotions.png";
     image.onload = () => {
       drawImageToCanvas(image); // Draw the image immediately
   
@@ -131,11 +132,16 @@ const TestPage = () => {
 
   return (
     <div className="pt-10 px-20 text-center">
-      <h1 className='text-4xl font-bold mb-8'>Stress Level Heatmap</h1>
+      <h1 className='text-4xl font-bold mb-7'>Stress Level Heatmap</h1>
+      <div className="mb-5">
+        <Link href="/heatmap/webcam" className="px-4 py-2 border border-gray-300 text-white rounded">
+          Go to Webcam Page
+        </Link>
+      </div>
       <div className="flex flex-col md:flex-row justify-center items-center md:space-x-4 space-y-4 md:space-y-0 w-full h-auto">
         <canvas  ref={imageRef} className="border border-gray-300" width="600" height="600"></canvas>
         <canvas ref={heatmapRef} className="border border-gray-300" width="600" height="600"></canvas>
-    </div>
+      </div>
     </div>
   );
 };
