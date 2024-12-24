@@ -40,7 +40,7 @@ const exampleRoute = [
 
 export default function MallStyleNavigation() {
   const { isLoaded } = useLoadScript({
-    googleMapsApiKey: 'AlzaSynUHYYCFPDhHrnu6QjCpJcZb0Ez4APmVJU',
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
 
   // Define the type for activeCategory
