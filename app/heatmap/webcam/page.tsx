@@ -62,10 +62,12 @@ function WebcamHeatmap() {
     const detectionLoop = async () => {
       // Detect all faces with landmarks and expressions
       const detections = await faceapi
-        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+        .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
         .withFaceLandmarks()
         .withFaceExpressions();
 
+      // **Log the detections**
+      console.log("Detections:", detections);
       // Clear previous heatmap
       context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -97,11 +99,11 @@ function WebcamHeatmap() {
         expressions.angry +
         expressions.fearful +
         expressions.sad +
-        expressions.disgusted;
+        expressions.disgusted + 
+        expressions.neutral;
 
       const positiveEmotionLevel =
         expressions.happy +
-        expressions.neutral +
         expressions.surprised;
         
       const { x, y, width, height } = faceBox.box;
@@ -109,7 +111,7 @@ function WebcamHeatmap() {
       // Determine the dominant emotion type
       let gradientColor: string;
 
-      if (stressLevel > positiveEmotionLevel - 1) {
+      if (stressLevel > positiveEmotionLevel) {
         // Stress dominates: use red gradient
         const redIntensity = Math.min(Math.floor(stressLevel * 255), 255);
         gradientColor = `rgba(${redIntensity}, 0, 0, 0.5)`;
