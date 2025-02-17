@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Airport Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom CSS for enhanced UI -->
+    <style>
+        body {
+            background: #f0f2f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .chat-container {
+            max-width: 650px;
+            margin: 50px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #007bff;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .chat-body {
+            padding: 20px;
+            height: 450px;
+            overflow-y: auto;
+        }
+
+        .chat-footer {
+            padding: 15px;
+            background: #f7f7f7;
+        }
+
+        .message {
+            margin-bottom: 15px;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.user .text {
+            background: #007bff;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .message.bot .text {
+            background: #e9ecef;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* Uniform height for the text input and buttons */
+        .input-group .form-control,
+        .input-group .btn {
+            height: 50px;
+            font-size: 16px;
+        }
+
+        /* Style for the voice button */
+        .btn-voice {
+            margin-left: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+        }
+
+        .btn-voice svg {
+            margin-top: 10px;
+        }
+
+        /* Style for the language selector */
+        .voice-lang-selector {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Airport Chatbot</div>
+        <div class="chat-body" id="chatbox">
+            <!-- Chat messages will be appended here -->
+        </div>
+        <div class="chat-footer">
+            <!-- Language Selector for Voice Input -->
+            <div class="form-group voice-lang-selector">
+                <label for="voice_lang_select">Select Voice Input Language:</label>
+                <select id="voice_lang_select" class="form-control">
+                    <option value="en-US">English</option>
+                    <option value="ar-SA">Arabic</option>
+                    <option value="hi-IN">Hindi</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="zh-CN">Chinese (Mandarin)</option>
+                </select>
+            </div>
+            <!-- Input Group -->
+            <div class="input-group">
+                <input type="text" id="user_input" class="form-control" placeholder="Ask your travel question here...">
+                <div class="input-group-append">
+                    <button id="send_btn" class="btn btn-primary">Send</button>
+                    <button id="voice_btn" class="btn btn-voice" title="Voice Input">
+                        <!-- Microphone icon (SVG) -->
+                        <svg width="24" height="24" fill="currentColor" class="bi bi-mic" viewBox="0 0 16 16">
+                            <path d="M8 11a3 3 0 0 0 3-3V4a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3z" />
+                            <path
+                                d="M5 8a.5.5 0 0 1 .5-.5H6v-2a2 2 0 1 1 4 0v2h.5a.5.5 0 0 1 0 1H10v2.5a.5.5 0 0 1-.5.5h-3A.5.5 0 0 1 6 11.5V9H5.5A.5.5 0 0 1 5 8z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for chat functionality and multilingual voice recognition -->
+    <script>
+        $(document).ready(function () {
+            // Append messages to the chatbox.
+            function appendMessage(sender, text) {
+                var messageHtml = "";
+                if (sender === 'user') {
+                    messageHtml = "<div class='message user'><div class='text'>" + text + "</div></div>";
+                } else {
+                    messageHtml = "<div class='message bot'><div class='text'>" + text + "</div></div>";
+                }
+                $("#chatbox").append(messageHtml);
+                $("#chatbox").scrollTop($("#chatbox")[0].scrollHeight);
+            }
+
+            // Send text input when "Send" is clicked or Enter is pressed.
+            $("#send_btn").click(function () {
+                var userMessage = $("#user_input").val().trim();
+                if (userMessage === "") return;
+                appendMessage('user', userMessage);
+                $.post("/chat", { message: userMessage }, function (data) {
+                    appendMessage('bot', data.response);
+                });
+                $("#user_input").val("");
+            });
+
+            $("#user_input").keypress(function (e) {
+                if (e.which === 13) {
+                    $("#send_btn").click();
+                }
+            });
+
+            // Setup voice recognition using the Web Speech API.
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                var recognition = new SpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = function (event) {
+                    var transcript = event.results[0][0].transcript;
+                    $("#user_input").val(transcript);
+                    $("#send_btn").click();
+                };
+
+                recognition.onerror = function (event) {
+                    console.error("Speech recognition error: " + event.error);
+                };
+
+                $("#voice_btn").click(function () {
+                    // Set the recognition language based on the selected value.
+                    var selectedLang = $("#voice_lang_select").val();
+                    recognition.lang = selectedLang;
+                    recognition.start();
+                });
+            } else {
+                // Hide the voice button if the browser does not support speech recognition.
+                $("#voice_btn").hide();
+            }
+        });
+    </script>
+
+    <!-- Bootstrap JS (optional for interactive components) -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+</html>
